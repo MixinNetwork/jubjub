@@ -30,8 +30,16 @@ func (lhs *ExtendedPoint) Add(rhs *ExtendedPoint) *ExtendedPoint {
 	return lhs.AddExtendedNiels(rhs.ToNiels())
 }
 
+func (lhs *ExtendedPoint) Sub(rhs *ExtendedPoint) *ExtendedPoint {
+	return lhs.SubExtendedNiels(rhs.ToNiels())
+}
+
 func (e *ExtendedPoint) Mul(buf []byte) *ExtendedPoint {
 	return e.ToNiels().Mul(buf)
+}
+
+func (e *ExtendedPoint) ClearCofactor() *ExtendedPoint {
+	return e.MulByCofactor()
 }
 
 // mul_by_cofactor
@@ -72,6 +80,21 @@ func (e *ExtendedPoint) AddExtendedNiels(other *ExtendedNielsPoint) *ExtendedPoi
 		v: b.Add(a),
 		z: d.Add(c),
 		t: d.Sub(c),
+	}
+	return point.Extended()
+}
+
+func (e *ExtendedPoint) SubExtendedNiels(other *ExtendedNielsPoint) *ExtendedPoint {
+	a := (e.v.Sub(e.u)).Mul(other.vPlusU)
+	b := (e.v.Add(e.u)).Mul(other.VminusU)
+	c := e.t1.Mul(e.t2).Mul(other.t2d)
+	d := (e.z.Mul(other.z)).Double()
+
+	point := &CompletedPoint{
+		u: b.Sub(a),
+		v: b.Add(a),
+		z: d.Sub(c),
+		t: d.Add(c),
 	}
 	return point.Extended()
 }
