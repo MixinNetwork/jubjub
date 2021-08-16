@@ -90,6 +90,9 @@ func New384(key []byte) (hash.Hash, error) { return newDigest(Size384, key, nil)
 // New256 returns a new hash.Hash computing the BLAKE2b-256 checksum. A non-nil
 // key turns the hash into a MAC. The key must be between zero and 64 bytes long.
 func New256(key []byte) (hash.Hash, error) { return newDigest(Size256, key, nil) }
+func New256WithPersonalization(key, personalization []byte) (hash.Hash, error) {
+	return newDigest(Size256, key, personalization)
+}
 
 // New returns a new hash.Hash computing the BLAKE2b checksum with a custom length.
 // A non-nil key turns the hash into a MAC. The key must be between zero and 64 bytes long.
@@ -217,8 +220,16 @@ func (d *digest) Reset() {
 	d.h = iv
 	d.h[0] ^= uint64(d.size) | (uint64(d.keyLen) << 8) | (1 << 16) | (1 << 24) | (0 << 32)
 	if d.personalization != nil {
-		d.h[6] ^= binary.LittleEndian.Uint64(d.personalization[:8])
-		d.h[7] ^= binary.LittleEndian.Uint64(d.personalization[8:])
+		switch d.size {
+		case Size:
+			d.h[6] ^= binary.LittleEndian.Uint64(d.personalization[:8])
+			d.h[7] ^= binary.LittleEndian.Uint64(d.personalization[8:])
+		case Size256:
+			for i := uint(0); i < 8; i++ {
+				b := uint32(d.personalization[i]) << (8 * uint(i%4))
+				d.h[6+i/4] ^= b
+			}
+		}
 	}
 	d.offset, d.c[0], d.c[1] = 0, 0, 0
 	if d.keyLen > 0 {
