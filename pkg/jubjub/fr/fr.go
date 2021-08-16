@@ -1,6 +1,7 @@
 package fr
 
 import (
+	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
 
@@ -8,6 +9,13 @@ import (
 )
 
 type Fr [4]uint64
+
+func Random() *Fr {
+	buf := make([]byte, 64)
+	rand.Read(buf)
+
+	return FromBytesWide(buf)
+}
 
 func FromBytes(byt []byte) *Fr {
 	d := &Fr{0, 0, 0, 0}
