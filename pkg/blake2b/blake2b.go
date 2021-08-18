@@ -226,7 +226,7 @@ func (d *digest) Reset() {
 			d.h[7] ^= binary.LittleEndian.Uint64(d.personalization[8:])
 		case Size256:
 			for i := uint(0); i < 8; i++ {
-				b := uint32(d.personalization[i]) << (8 * uint(i%4))
+				b := uint64(d.personalization[i]) << (8 * uint(i%4))
 				d.h[6+i/4] ^= b
 			}
 		}
